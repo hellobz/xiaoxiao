@@ -1,19 +1,25 @@
 <template>
   <div class="movie_body">
     <ul>
-      <li>
-        <div class="pic_show"><img src="/images/movie_1.jpg" /></div>
+      <li v-for="item in coming" :key="item.id">
+        <div class="pic_show"><img :src="item.img | setWH('128.180')" /></div>
         <div class="info_list">
-          <h2>无名之辈</h2>
-          <p><span class="person">17746</span> 人想看</p>
-          <p>主演: 陈建斌,任素汐,潘斌龙</p>
-          <p>2018-11-30上映</p>
+          <h2>
+            {{ item.nm }}
+            <img v-if="item.version" src="@/assets/maxs.png" alt="" />
+          </h2>
+          <p>
+            <span class="person">{{ item.wish }}</span> 人想看
+          </p>
+          <p>主演: {{ item.star }}</p>
+          <p>{{ item.rt }}上映</p>
         </div>
         <div class="btn_pre">
           预售
         </div>
       </li>
-      <li>
+
+      <!-- <li>
         <div class="pic_show"><img src="/images/movie_2.jpg" /></div>
         <div class="info_list">
           <h2>毒液：致命守护者</h2>
@@ -96,7 +102,7 @@
         <div class="btn_pre">
           预售
         </div>
-      </li>
+      </li> -->
     </ul>
   </div>
 </template>
@@ -105,7 +111,25 @@
 export default {
   name: "Comming",
   data() {
-    return {};
+    return {
+      coming: [],
+    };
+  },
+
+  mounted() {
+    this.getCommingSoon();
+  },
+
+  methods: {
+    async getCommingSoon() {
+      const res = await this.$http.get("/api/ajax/comingList", {
+        params: { ci: 1, token: "", limit: 10 },
+      });
+      if (res.status === 200) {
+        console.log(res);
+        this.coming = res.data.coming;
+      }
+    },
   },
 };
 </script>
@@ -144,6 +168,7 @@ export default {
   width: 150px;
   overflow: hidden;
   white-space: nowrap;
+  /* 多余部分... */
   text-overflow: ellipsis;
 }
 .movie_body .info_list p {

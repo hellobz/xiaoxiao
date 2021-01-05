@@ -3,13 +3,25 @@
     <div class="search_input">
       <div class="search_input_wrapper">
         <i class="iconfont icon-sousuo"></i>
-        <input type="text" />
+        <input type="text" v-model="iptValue" />
       </div>
     </div>
     <div class="search_result">
       <h3>电影/电视剧/综艺</h3>
       <ul>
-        <li>
+        <li v-for="item in moviesList" :key="item.id">
+          <div class="img"><img :src="item.img | setWH('128.180')" /></div>
+          <div class="info">
+            <p>
+              <span>{{ item.nm }}</span
+              ><span>{{ item.sc }}</span>
+            </p>
+            <p>{{ item.enm }}</p>
+            <p>{{ item.cat }}</p>
+            <p>{{ item.rt }}</p>
+          </div>
+        </li>
+        <!-- <li>
           <div class="img"><img src="/images/movie_1.jpg" /></div>
           <div class="info">
             <p><span>无名之辈</span><span>8.5</span></p>
@@ -17,16 +29,7 @@
             <p>剧情,喜剧,犯罪</p>
             <p>2018-11-16</p>
           </div>
-        </li>
-        <li>
-          <div class="img"><img src="/images/movie_1.jpg" /></div>
-          <div class="info">
-            <p><span>无名之辈</span><span>8.5</span></p>
-            <p>A Cool Fish</p>
-            <p>剧情,喜剧,犯罪</p>
-            <p>2018-11-16</p>
-          </div>
-        </li>
+        </li> -->
       </ul>
     </div>
   </div>
@@ -36,7 +39,58 @@
 export default {
   name: "Search",
   data() {
-    return {};
+    return {
+      //搜索双向绑定的内容
+      iptValue: "",
+      // 数据
+      moviesList: [],
+      //节流
+      isSearch: true,
+    };
+  },
+
+  //监听
+  watch: {
+    iptValue(newVal) {
+      var that = this;
+      this.cancelRequest();
+      //防抖
+      this.$http
+        .get("/api/ajax/search?kw=" + newVal + "&cityId=10&stype=-1", {
+          cancelToken: new this.$http.CancelToken(function(c) {
+            that.source = c;
+          }),
+        })
+        .then((res) => {
+          console.log(res);
+          var status = res.status;
+          var movies = res.data.movies;
+          if (status === 200 && movies) {
+            this.moviesList = movies.list;
+          }
+        })
+        .catch((err) => {
+          if (this.$http.isCancel(err)) {
+            console.log("Rquest canceled", err.message); //请求如果被取消，这里是返回取消的message
+          } else {
+            //handle error
+            console.log(err);
+          }
+        });
+
+      if (newVal.trim().length === 0) {
+        this.moviesList = [];
+        return;
+      }
+    },
+  },
+
+  methods: {
+    cancelRequest() {
+      if (typeof this.source === "function") {
+        this.source("终止请求");
+      }
+    },
   },
 };
 </script>
