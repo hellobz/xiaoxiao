@@ -1,25 +1,30 @@
 <template>
   <div class="movie_body">
-    <ul>
-      <li v-for="item in coming" :key="item.id">
-        <div class="pic_show"><img :src="item.img | setWH('128.180')" /></div>
-        <div class="info_list">
-          <h2>
-            {{ item.nm }}
-            <img v-if="item.version" src="@/assets/maxs.png" alt="" />
-          </h2>
-          <p>
-            <span class="person">{{ item.wish }}</span> 人想看
-          </p>
-          <p>主演: {{ item.star }}</p>
-          <p>{{ item.rt }}上映</p>
-        </div>
-        <div class="btn_pre">
-          预售
-        </div>
-      </li>
+    <Loading v-if="isLoading" />
+    <Scroller
+      v-else
+      :handleToScroll="handleToScroll"
+      :handleToTouchEnd="handleToTouchEnd"
+    >
+      <ul>
+        <li class="pullDown">{{ pullDownMsg }}</li>
+        <li v-for="item in coming" :key="item.id">
+          <div class="pic_show"><img :src="item.img | setWH('128.180')" /></div>
+          <div class="info_list">
+            <h2>
+              {{ item.nm }}
+              <img v-if="item.version" src="@/assets/maxs.png" alt="" />
+            </h2>
+            <p>
+              <span class="person">{{ item.wish }}</span> 人想看
+            </p>
+            <p>主演: {{ item.star }}</p>
+            <p>{{ item.rt }}上映</p>
+          </div>
+          <div class="btn_pre">预售</div>
+        </li>
 
-      <!-- <li>
+        <!-- <li>
         <div class="pic_show"><img src="/images/movie_2.jpg" /></div>
         <div class="info_list">
           <h2>毒液：致命守护者</h2>
@@ -103,7 +108,8 @@
           预售
         </div>
       </li> -->
-    </ul>
+      </ul>
+    </Scroller>
   </div>
 </template>
 
@@ -113,21 +119,62 @@ export default {
   data() {
     return {
       coming: [],
+      pullDownMsg: "",
+      //是否加载动画
+      isLoading: true,
+      //是否切换显示
+      prevCityId: -1,
     };
   },
 
-  mounted() {
+  activated() {
     this.getCommingSoon();
   },
 
   methods: {
     async getCommingSoon() {
+      var cityId = this.$store.state.city.id;
+      if (this.prevCityId === cityId) return;
+      this.isLoading = true;
+      console.log(1213);
       const res = await this.$http.get("/api/ajax/comingList", {
-        params: { ci: 1, token: "", limit: 10 },
+        params: { ci: cityId, token: "", limit: 10 },
       });
       if (res.status === 200) {
-        console.log(res);
         this.coming = res.data.coming;
+        this.isLoading = false;
+        this.prevCityId = cityId;
+      }
+    },
+
+    handleToScroll(pos) {
+      if (pos.y > 30) {
+        this.pullDownMsg = "正在更新中";
+      }
+    },
+
+    handleToTouchEnd(pos) {
+      var i = 1;
+      if (pos.y > 30) {
+        this.$http
+          .get("/api/ajax/comingList", {
+            params: { ci: i, token: "", limit: 10 },
+          })
+          .then((res) => {
+            if (res.status === 200) {
+              this.pullDownMsg = "更新完毕";
+              setTimeout(() => {
+                this.coming = res.data.coming;
+                this.pullDownMsg = "";
+              }, 1000);
+            }
+          })
+          .catch((err) => {});
+
+        i++;
+        if (i === 11) {
+          return;
+        }
       }
     },
   },
@@ -205,5 +252,13 @@ export default {
 }
 .movie_body .btn_pre {
   background-color: #3c9fe6;
+}
+
+.movie_body .pullDown {
+  margin: 0;
+  padding: 0;
+  border: none;
+  display: block;
+  text-align: center;
 }
 </style>

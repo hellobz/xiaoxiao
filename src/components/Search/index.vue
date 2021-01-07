@@ -53,14 +53,18 @@ export default {
   watch: {
     iptValue(newVal) {
       var that = this;
+      var cityId = this.$store.state.city.id;
       this.cancelRequest();
       //防抖
       this.$http
-        .get("/api/ajax/search?kw=" + newVal + "&cityId=10&stype=-1", {
-          cancelToken: new this.$http.CancelToken(function(c) {
-            that.source = c;
-          }),
-        })
+        .get(
+          "/api/ajax/search?kw=" + newVal + "&cityId=" + cityId + "&stype=-1",
+          {
+            cancelToken: new this.$http.CancelToken(function (c) {
+              that.source = c;
+            }),
+          }
+        )
         .then((res) => {
           console.log(res);
           var status = res.status;

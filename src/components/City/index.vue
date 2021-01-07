@@ -44,25 +44,41 @@
     </div> -->
 
     <div class="city_list" ref="city_list">
-      <div class="city_hot">
-        <h2>热门城市</h2>
-        <ul class="clearfix">
-          <li v-for="item in hotList" :key="item.id">{{ item.nm }}</li>
-        </ul>
-      </div>
-      <!--end city_hot-->
+      <Loading v-if="isLoading" />
+      <!-- Scroller是针对一个整体的 有两个div是没效的 需在最外面包一个div -->
+      <Scroller v-else ref="city_List">
+        <div>
+          <div class="city_hot">
+            <h2>热门城市</h2>
+            <ul class="clearfix">
+              <li
+                v-for="item in hotList"
+                :key="item.id"
+                @tap="handleToCity(item.nm, item.id)"
+              >
+                {{ item.nm }}
+              </li>
+            </ul>
+          </div>
+          <!--end city_hot-->
 
-      <div class="city_sort" ref="city_sort">
-        <div v-for="item in cityList" :key="item.index">
-          <h2 class="tag_list">{{ item.index }}</h2>
-          <ul>
-            <li v-for="subItem in item.list" :key="subItem.id">
-              {{ subItem.nm }}
-            </li>
-          </ul>
+          <div class="city_sort" ref="city_sort">
+            <div v-for="item in cityList" :key="item.index">
+              <h2 class="tag_list">{{ item.index }}</h2>
+              <ul>
+                <li
+                  v-for="subItem in item.list"
+                  :key="subItem.id"
+                  @tap="handleToCity(subItem.nm, subItem.id)"
+                >
+                  {{ subItem.nm }}
+                </li>
+              </ul>
+            </div>
+          </div>
+          <!--end city_sort-->
         </div>
-      </div>
-      <!--end city_sort-->
+      </Scroller>
     </div>
 
     <div class="city_index">
@@ -87,6 +103,8 @@ export default {
     return {
       cityList: [],
       hotList: [],
+      //是否加载动画
+      isLoading: true,
     };
   },
 
@@ -95,16 +113,28 @@ export default {
   },
 
   methods: {
-    async getCityList() {
-      const res = await this.$http.get("/api/dianying/cities.json");
-      console.log(res);
-      if (res.status === 200) {
-        var cities = res.data.cts;
+    getCityList() {
+      var cityList = window.localStorage.getItem("cityList");
+      var hotList = window.localStorage.getItem("hotList");
+      if (cityList && hotList) {
+        this.cityList = JSON.parse(cityList);
+        this.hotList = JSON.parse(hotList);
+        this.isLoading = false;
+      } else {
+        this.$http.get("/api/dianying/cities.json").then((res) => {
+          if (res.status === 200) {
+            var cities = res.data.cts;
 
-        //改造成这个样子 [{index: 'A,list: [{nm:'阿城',id:123}]}]
-        var { cityList, hotList } = this.formatCityList(cities);
-        this.cityList = cityList;
-        this.hotList = hotList;
+            //改造成这个样子 [{index: 'A,list: [{nm:'阿城',id:123}]}]
+            var { cityList, hotList } = this.formatCityList(cities);
+            this.cityList = cityList;
+            this.hotList = hotList;
+            this.isLoading = false;
+            //因为cityList是数组 而localStorage存储的字符串 为了不破坏原有数组将其用stringify转换 将变成字符串格式数组
+            window.localStorage.setItem("cityList", JSON.stringify(cityList));
+            window.localStorage.setItem("hotList", JSON.stringify(hotList));
+          }
+        });
       }
     },
 
@@ -154,7 +184,6 @@ export default {
         }
         return true;
       }
-      console.log(cityList);
       return {
         cityList,
         hotList,
@@ -169,7 +198,18 @@ export default {
       // console.log(111);
       // console.log(this.$refs.city_sort.parentNode.scrollTop);
       // console.log(this.$refs.city_list);
-      document.documentElement.scrollTop = h[index].offsetTop;
+      //原生跳转
+      // document.documentElement.scrollTop = h[index].offsetTop;
+      //往上滚动为负值
+      this.$refs.city_List.toScrollTop(-h[index].offsetTop);
+    },
+
+    // 点击修改城市
+    handleToCity(nm, id) {
+      this.$store.commit("city/CITY_INFO", { nm, id });
+      window.localStorage.setItem("nowNm", nm);
+      window.localStorage.setItem("nowId", id);
+      this.$router.push("/movie/nowplaying");
     },
   },
 };
@@ -251,6 +291,6 @@ export default {
 }
 
 .city_body .city_index ul li {
-  height: 24px;
+  height: 21px;
 }
 </style>

@@ -4,7 +4,7 @@
     <div id="content">
       <div class="movie_menu">
         <router-link tag="div" to="/movie/city" class="city_name">
-          <span>大连</span>
+          <span>{{ $store.state.city.nm }}</span>
           <i class="iconfont icon-lower-triangle"></i>
         </router-link>
 
@@ -33,6 +33,7 @@
 <script>
 import Header from "@/components/Header";
 import TabBar from "@/components/TabBar";
+import { messageBox } from "@/components/JS";
 export default {
   name: "movie",
   components: {
@@ -43,11 +44,34 @@ export default {
     return {};
   },
 
-  created() {
+  created() {},
+
+  mounted() {
+    //可以不立马弹出 可以延迟下
+    setTimeout(() => {
+      this.$http.get("/api/getLocation").then((res) => {
+        if (res.status === 200) {
+          var nm = res.data.nm;
+          var id = res.data.id;
+          if (this.$store.state.city.id == id) return;
+          messageBox({
+            title: "定位1",
+            content: nm,
+            cancel: "取消",
+            ok: "切换定位",
+            handleCancel() {},
+            handleOk() {
+              window.localStorage.setItem("nowNm", nm);
+              Window.localStorage.setItem("nowId", id);
+              window.location.reload();
+            },
+          });
+        }
+      });
+    }, 3000);
   },
 
-  methods: {
-  },
+  methods: {},
 };
 </script>
 
