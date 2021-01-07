@@ -6,6 +6,16 @@ import store from "./store";
 //导入axios
 import axios from "axios";
 
+//全局引入
+import Scroller from "@/components/Scroller"
+//做成全局组件
+Vue.component("Scroller",Scroller)
+
+//加载动画
+import Loading from "@/components/Loading"
+//做成全局组件
+Vue.component("Loading",Loading)
+
 Vue.prototype.$http = axios;
 
 //setWH是过滤器名字

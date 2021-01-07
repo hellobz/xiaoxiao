@@ -1,29 +1,32 @@
 <template>
   <div class="cinema_body">
-    <ul>
-      <li v-for="item in cinemas" :key="item.id">
-        <div>
-          <span>{{ item.nm }}</span>
-          <span class="q"
-            ><span class="price">{{ item.sellPrice }}</span> 元起</span
-          >
-        </div>
-        <div class="address">
-          <span>{{ item.addr }}</span>
-          <span>{{ item.distance }}</span>
-        </div>
-        <div class="card">
-          <div
-            v-for="(num, key) in item.tag"
-            v-show="num === 1"
-            :key="key"
-            :class="key === 'allowRefund' || key === 'endorse' ? 'or' : 'bl'"
-          >
-            {{ key | formatCard(key) }}
+    <Loading v-if="isLoading" />
+    <Scroller v-else>
+      <ul>
+        <li v-for="item in cinemas" :key="item.id">
+          <div>
+            <span>{{ item.nm }}</span>
+            <span class="q"
+              ><span class="price">{{ item.sellPrice }}</span> 元起</span
+            >
           </div>
-        </div>
-      </li>
-    </ul>
+          <div class="address">
+            <span>{{ item.addr }}</span>
+            <span>{{ item.distance }}</span>
+          </div>
+          <div class="card">
+            <div
+              v-for="(num, key) in item.tag"
+              v-show="num === 1"
+              :key="key"
+              :class="key === 'allowRefund' || key === 'endorse' ? 'bl' : 'or'"
+            >
+              {{ key | formatCard(key) }}
+            </div>
+          </div>
+        </li>
+      </ul>
+    </Scroller>
   </div>
 </template>
 
@@ -34,10 +37,13 @@ export default {
     return {
       //数据
       cinemas: [],
+      //是否加载动画
+      isLoading: true,
+      prevCityId: -1,
     };
   },
 
-  mounted() {
+  activated() {
     this.getCiList();
   },
 
@@ -75,10 +81,14 @@ export default {
 
   methods: {
     async getCiList() {
-      const res = await this.$http.get("/api/ajax/cinemaList");
+      var cityId = this.$store.state.city.id;
+      if (this.prevCityId === cityId) return;
+      this.isLoading = true;
+      const res = await this.$http.get("/api/ajax/cinemaList?ci=" + cityId);
       if (res.status === 200) {
-        console.log(res);
         this.cinemas = res.data.cinemas;
+        this.isLoading = false;
+        this.prevCityId = cityId;
       }
     },
   },
