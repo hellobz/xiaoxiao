@@ -21,6 +21,34 @@ export default {
       component: () => import("@/components/Search"),
     },
     {
+      path: "detail/one/:movieId",
+      components: {
+        default: () => import("@/components/NowPlaying"),
+        detail: () => import("@/views/Movie/detail")
+      },
+
+      // props: true 不是多个显示区域可以直接配
+      props: {
+        detail: true
+      }
+
+    },
+
+    {
+      path: "detail/two/:movieId",
+      components: {
+        default: () => import("@/components/ComingSoon"),
+        detail: () => import("@/views/Movie/detail")
+      },
+
+      // props: true 不是多个显示区域可以直接配
+      props: {
+        detail: true
+      }
+
+    },
+
+    {
       path: "/movie",
       redirect: "/movie/nowplaying",
     },
