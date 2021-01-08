@@ -66,7 +66,6 @@ export default {
           }
         )
         .then((res) => {
-          console.log(res);
           var status = res.status;
           var movies = res.data.movies;
           if (status === 200 && movies) {

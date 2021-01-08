@@ -9,11 +9,11 @@
       <ul>
         <li class="pullDown">{{ pullDownMsg }}</li>
         <li v-for="item in movieList" :key="item.id">
-          <div class="pic_show" @tap="handleToDetail">
+          <div class="pic_show" @tap="handleToDetail(item.id)">
             <img :src="item.img | setWH('128.180')" />
           </div>
           <div class="info_list">
-            <h2>
+            <h2 @tap="handleToDetail(item.id)">
               {{ item.nm
               }}<img v-if="item.version" src="../../assets/maxs.png" />
             </h2>
@@ -50,7 +50,6 @@ export default {
     if (this.prevCityId === cityId) return;
     //return终止执行
     this.isLoading = true;
-    console.log(123);
     this.$http.get("/api/ajax/movieOnInfoList?cityId=" + cityId).then((res) => {
       if (res.status === 200) {
         this.movieList = res.data.movieList;
@@ -100,8 +99,8 @@ export default {
 
     // },
 
-    handleToDetail() {
-      console.log("handleToDetail");
+    handleToDetail(movieId) {
+      this.$router.push("/movie/detail/one/" + movieId);
     },
 
     handleToScroll(pos) {
